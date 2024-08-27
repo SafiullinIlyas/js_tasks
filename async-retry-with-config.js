@@ -1,24 +1,31 @@
 const asyncRetryWithConfig = (cb, config) => {
     let counter = 0;
     return new Promise((resolve, reject) => {
+        function checkAttempt(err) {
+            counter++
+
+            if (counter >= config.count)
+                return reject(err)
+
+            setTimeout(() =>{
+                tryResolvePromise()
+            }, config.delay)
+        }
+
         function tryResolvePromise() {
-            if (!config.count)
-                return reject('No attempts')
+            try {
+                if (!config.count)
+                    return reject('No attempts')
 
-            cb()
-                .then(res => resolve(res))
-                .catch((err) => {
-                    counter++
+                    cb()
+                        .then(res => resolve(res))
+                        .catch((err) => checkAttempt(err))
+                }
 
-                    if (counter >= config.count)
-                        return reject(err)
+                catch(err) {
+                    checkAttempt(err)
+                }
 
-
-
-                    setTimeout(() =>{
-                        tryResolvePromise()
-                    }, config.delay)
-                })
         }
         tryResolvePromise()
     })
@@ -34,9 +41,11 @@ const failingFunction = () => {
 
 const config = { count: 3, delay: 1000 };
 
+/*
 asyncRetryWithConfig(failingFunction, config)
     .then((res) => console.log("Success:", res))
     .catch((err) => console.log("Final Error:", err));
+*/
 
 
 // Вспомогательная функция для тестов, которая будет завершаться с ошибкой определённое количество раз
@@ -125,9 +134,53 @@ const test5 = () => {
         });
 };
 
+// Тест 6: Синхронная ошибка
+const testSyncError = () => {
+    const config = { count: 3, delay: 100 };
+    const cb = () => {
+        throw new Error("Synchronous Error");
+    };
+
+    asyncRetryWithConfig(cb, config)
+        .then(() => {
+            console.error('Test Sync Error should not pass');
+        })
+        .catch(error => {
+            console.assert(error.message === "Synchronous Error", 'Test Sync Error Failed');
+        });
+};
+
+// Тест 7: Синхронный успех после попыток
+const testSyncSuccessAfterAttempts = () => {
+    const config = { count: 3, delay: 100 };
+    let attempts = 0;
+    const cb = () => {
+        if (attempts < 2) {
+            attempts++;
+            throw new Error("Synchronous Error");
+        }
+        return "Success";
+    };
+
+    asyncRetryWithConfig(cb, config)
+        .then(result => {
+            console.assert(result === "Success", 'Test Sync Success After Attempts Failed');
+        })
+        .catch(() => {
+            console.error('Test Sync Success After Attempts should not fail');
+        });
+};
+
+
+
+
 // Запуск тестов
-test1();
-test2();
-test3();
-test4();
-test5();
+// test1();
+// test2();
+// test3();
+// test4();
+// test5();
+
+// Синхронная ошибка
+testSyncError();
+testSyncSuccessAfterAttempts();
