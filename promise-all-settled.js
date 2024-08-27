@@ -4,25 +4,15 @@ const promiseAllSettled = (... promises) => {
 
     return new Promise(resolve => {
             promises.forEach((promise, index) => {
-                if (promise instanceof Promise){
-                    promise
-                        .then(data => result[index] = ({status:'fulfilled', value:data}))
-                        .catch(err => result[index] = ({status:'rejected', reason:err}))
-                        .finally(() => {
-                            settledCount++
-                            if (settledCount === promises.length){
-                                resolve(result)
-                            }
-                        })
-
-                }
-                else {
-                    result[index] = ({status:'fulfilled', value:promise})
-                    settledCount++
-
-                    if (settledCount === promises.length)
-                        resolve(result)
-                }
+                Promise.resolve(promise)
+                    .then(data => result[index] = ({status:'fulfilled', value:data}))
+                    .catch(err => result[index] = ({status:'rejected', reason:err}))
+                    .finally(() => {
+                        settledCount++
+                        if (settledCount === promises.length){
+                            resolve(result)
+                        }
+                    })
             })
     })
 }
