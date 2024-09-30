@@ -1,22 +1,20 @@
 // Ограничение O(n), по памяти нет
 function sortTickets(tickets){
-    const reversedMap = {}
+    const destinations = new Set();
     const map = {}
 
     const sortedTickets = [];
 
     for (let {from, to} of tickets) {
         map[from] = to;
-        reversedMap[to] = from
+        destinations.add(to);
     }
 
-    let startPoint = null;
-    let direction = tickets[0].to;
-
-    while(direction) {
-        direction = reversedMap[direction]
-        if (direction)
-            startPoint = direction
+   let startPoint = null;
+    for (const ticket of tickets) {
+        if (!destinations.has(ticket.from)) {
+            startPoint = ticket.from
+        }
     }
 
     let from = startPoint;
