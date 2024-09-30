@@ -76,6 +76,43 @@ function atm(sum, limits) {
     return noteList;
 }
 
+function atm2(sum, limits) {
+    const maxAvailableSum = Object.entries(limits).reduce(
+        (acc, [note, count]) => acc + +note * count,
+        0,
+    );
+
+    if (sum > maxAvailableSum) throw new Error(`Sum ${sum} can not be given`);
+
+    if (sum < 0) throw new Error("Sum can not be less 0");
+
+    const result = {}
+
+    const notes = Object.keys(limits).sort((a,b) => b - a)
+
+
+
+    for (const note of notes) {
+        const count = Math.min(Math.floor(sum / +note), limits[note]);
+        if (count) {
+            result[note] = count
+            sum -= count * +note;
+        }
+    }
+
+    if (sum !== 0) {
+        throw new Error(`Sum ${sum} can not be given`);
+    }
+
+    Object.keys(result).forEach((key) => {
+        limits[key] -= result[key]
+    })
+
+    return result;
+}
+
+console.log(atm2(6000, limits))
+
 console.assert(
     JSON.stringify(
         atm(1000, { 5000: 5, 2000: 3, 1000: 5, 500: 5, 100: 5, 50: 6, 10: 4 }),
